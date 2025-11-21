@@ -1,0 +1,3 @@
+[21/Nov/2025:03:52:03 +0000] 200 - GET http mockinvestment.local "/" [Client 192.168.95.1] [Length 568] [Gzip 1.86] "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36" "-"
+[21/Nov/2025:03:52:05 +0000] 200 - GET http mockinvestment.local "/" [Client 192.168.95.1] [Length 568] [Gzip 1.86] "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36" "-"
+[21/Nov/2025:03:52:10 +0000] 200 - GET http 192.168.95.128 "/" [Client 192.168.95.1] [Length 568] [Gzip 1.86] "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36" "-"

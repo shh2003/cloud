@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  reverse-proxy:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - auth-stock-api
+      - trade-api
+    networks:
+      - app-net
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: investment_db
+      MYSQL_USER: stock_user
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "33306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-net
+
+  auth-stock-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: auth-stock-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 5001
+      BACKEND_NAME: auth-stock-api
+      DB_HOST: mysql
+      DB_USER: stock_user
+      DB_PASSWORD: 123456
+      DB_NAME: investment_db
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      SESSION_SECRET: supersecret
+      KIS_APP_KEY: ${KIS_APP_KEY}
+      KIS_APP_SECRET: ${KIS_APP_SECRET}
+      KIS_API_URL: https://openapi.koreainvestment.com:9443
+      KIS_MOCK_MODE: "false"
+      SERVICE_ROLE: "auth-stock"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - app-net
+    expose:
+      - "5001"   # 내부 노출용 (nginx가 이 포트로 붙음)
+
+  trade-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trade-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 5002
+      BACKEND_NAME: trade-api
+      DB_HOST: mysql
+      DB_USER: stock_user
+      DB_PASSWORD: 123456
+      DB_NAME: investment_db
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      SESSION_SECRET: supersecret
+      KIS_APP_KEY: ${KIS_APP_KEY}
+      KIS_APP_SECRET: ${KIS_APP_SECRET}
+      KIS_API_URL: https://openapi.koreainvestment.com:9443
+      KIS_MOCK_MODE: "false"
+      SERVICE_ROLE: "trade"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - app-net
+    expose:
+      - "5002"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    restart: always
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      REACT_APP_API_BASE_URL: "/api"
+      HOST: "0.0.0.0"
+      DANGEROUSLY_DISABLE_HOST_CHECK: "true"
+    stdin_open: true
+    tty: true
+    networks:
+      - app-net
+
+networks:
+  app-net:
+
+volumes:
+  mysql_data:
+  redis_data:
